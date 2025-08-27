@@ -2,7 +2,7 @@
   "name": "quiz",
   "version": "1.0.0",
   "scripts": {
-    "start": "node app.js --env-file-if-exists=.env",
+    "start": "node --env-file-if-exists=.env app.js",
     "dev": "nodemon app.js -- --env-file-if-exists=.env",
     "debug": "node --inspect-brk app.js --env-file-if-exists=.env"
   },
