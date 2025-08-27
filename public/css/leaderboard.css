@@ -1,0 +1,124 @@
+:root {
+    --primary-color: #2196F3;
+    --secondary-color: #1976D2;
+    --accent-color: #FF4081;
+    --background: #f8f9fa;
+    --surface: #ffffff;
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --highlight-color: #FFF3E0;
+}
+
+.leaderboard {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    position: relative;
+}
+
+.player-card {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    background: var(--background);
+    border-radius: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.rank-badge {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    margin-right: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.player-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-name {
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;
+}
+
+.player-score {
+    font-weight: 700;
+    color: var(--accent-color);
+    background: rgba(255, 64, 129, 0.1);
+    padding: 0.6rem 1.2rem;
+    border-radius: 1rem;
+    font-size: 1.1rem;
+}
+
+.medal {
+    position: absolute;
+    right: -8px;
+    top: -8px;
+    font-size: 2rem;
+    opacity: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.medal.gold {
+    opacity: 1;
+    color: #FFD700;
+}
+
+.medal.sliver {
+    opacity: 1;
+    color: #C0C0C0;
+}
+
+.medal.bronze {
+    opacity: 1;
+    color: #CD7F32;
+}
+
+.player-card.gold {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+}
+
+.player-card.sliver {
+    background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 100%);
+}
+
+.player-card.bronze {
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%);
+}
+
+.my-ranking {
+    background: var(--highlight-color) !important;
+    border: 2px solid #FFA726;
+    box-shadow: 0 4px 12px rgba(255, 167, 38, 0.2);
+    order: -1;
+    margin-bottom: 2rem;
+}
+
+.player-card.highlight {
+    background: var(--highlight-color) !important;
+    border-left: 4px solid #FFA726;
+}

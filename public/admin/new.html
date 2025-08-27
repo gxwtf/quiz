@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>创建比赛 - 答题系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f6fa;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            margin: 0 0 25px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .form-section {
+            margin: 25px 0;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        button[type="submit"] {
+            background: #2196f3;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background: #1976d2;
+        }
+
+        .form-note {
+            color: #666;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+    </style>
+    <script src="/basic.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>创建新比赛</h1>
+
+        <form id="createForm" onsubmit="createQuiz(event)">
+            <div class="form-section">
+                <div class="form-group">
+                    <label>比赛名称 <span style="color:#ff4d4f">*</span></label>
+                    <input type="text" id="quizName" required placeholder="请输入比赛名称" maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label>比赛日期 <span style="color:#ff4d4f">*</span></label>
+                    <input type="date" id="quizDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>邀请码 <span style="color:#ff4d4f">*</span></label>
+                    <input type="text" id="inviteCode" required placeholder="例如：114514">
+                </div>
+
+                <div class="form-group">
+                    <label>答题须知</label>
+                    <textarea id="notice" rows="4" placeholder="请输入参赛者需要了解的注意事项"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>一等奖数量</label>
+                    <input type="number" id="firstPrizeCount" min="0" placeholder="请输入一等奖数量">
+                </div>
+                <div class="form-group">
+                    <label>二等奖数量</label>
+                    <input type="number" id="secondPrizeCount" min="0" placeholder="请输入二等奖数量">
+                </div>
+                <div class="form-group">
+                    <label>三等奖数量</label>
+                    <input type="number" id="thirdPrizeCount" min="0" placeholder="请输入三等奖数量">
+                </div>
+            </div>
+
+            <button type="submit">立即创建</button>
+        </form>
+    </div>
+
+    <script>
+        async function createQuiz(e) {
+            e.preventDefault();
+
+            const formData = {
+                name: document.getElementById('quizName').value.trim(),
+                invite_code: document.getElementById('inviteCode').value.trim(),
+                notice: document.getElementById('notice').value.trim(),
+                quiz_date: document.getElementById('quizDate').value,
+                first_prize_num: parseInt(document.getElementById('firstPrizeCount').value.trim()) || 0,
+                second_prize_num: parseInt(document.getElementById('secondPrizeCount').value.trim()) || 0,
+                third_prize_num: parseInt(document.getElementById('thirdPrizeCount').value.trim()) || 0
+            };
+
+            try {
+                const response = await fetch('/quiz/new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('创建成功！即将跳转管理页面');
+                    location.href = `/admin/manage?id=${result.id}`;
+                } else {
+                    throw new Error(result.error || '创建失败');
+                }
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/quiz/quizzes');
+                if (!res.ok) {
+                    location.href = '/login';
+                    return;
+                }
+            } catch {
+                location.href = '/login';
+                return;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+uploads/
+session/
+public/certificates/
+.DS_Store
+.env
+.env.production

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>我的比赛 - 答题系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --accent-color: #FF4081;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --highlight-color: #FFF3E0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: var(--background);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .quiz-item {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+
+        .quiz-title {
+            font-weight: bold;
+            color: var(--text-primary);
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-ended {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .participants {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            text-align: center;
+            min-height: 28px;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .action-btn+.action-btn {
+            margin-left: 6px;
+        }
+
+        .action-group {
+            margin-left: auto;
+            display: flex;
+            gap: 6px;
+        }
+    </style>
+    <script src='/basic.js'></script>
+</head>
+
+<body>
+    <h1>比赛列表</h1>
+    <div id="quizList"></div>
+    <script>
+        async function loadQuizzes() {
+            try {
+                const res = await fetch('/quiz/quizzes');
+                const { data } = await res.json();
+                const list = document.getElementById('quizList');
+                list.innerHTML = data.map(quiz => `
+            <div class="quiz-item">
+            <div class="quiz-title">${quiz.name}</div>
+            <div class="quiz-title">${quiz.quiz_date}</div>
+            <div class="quiz-info">
+              <span class="status status-${quiz.status}">${getStatusText(quiz.status)}</span>
+              ${getActionButton(quiz.status, quiz.id)}
+            </div>
+            <div class="participants">参与人数：${quiz.participant_num}</div>
+          </div>
+        `).join('');
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function getStatusText(status) {
+            return { pending: '准备中', active: '进行中', ended: '已结束' }[status] || '未知状态';
+        }
+
+        async function downloadCertificate(quizId) {
+            try {
+                const response = await fetch(`/quiz/${quizId}/certificate`);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || '下载失败');
+                }
+
+                const contentDisposition = response.headers.get('Content-Disposition');
+                const filenameMatch = contentDisposition && contentDisposition.match(/filename="(.+)"/);
+                const filename = filenameMatch ? filenameMatch[1] : `certificate_${quizId}.pdf`;
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(`下载失败: ${error.message}`);
+            }
+        }
+
+        function getActionButton(status, quizId) {
+            if (status === 'active') {
+                return `<div class="action-group"><a href="/player/enter?id=${quizId}" class="action-btn">进入比赛</a></div>`;
+            } else if (status === 'ended') {
+                return `
+                    <div class="action-group">
+                        <a href="/review?id=${quizId}" class="action-btn">回顾比赛</a>
+                        <a href="javascript:void(0)" onclick="downloadCertificate('${quizId}')" class="action-btn">下载证书</a>
+                    </div>
+                `;
+            }
+            return '';
+        }
+
+        window.onload = loadQuizzes;
+    </script>
+</body>
+
+</html>

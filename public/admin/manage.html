@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>比赛编辑 - 答题系统</title>
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --accent-color: #FF4081;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --highlight-color: #FFF3E0;
+        }
+
+        button.active {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f6fa;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            margin: 0 0 25px;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #status {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-ended {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        nav {
+            margin: 25px 0;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        nav button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            background: #f8f9fa;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        nav button:hover:not(.active) {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        nav button.active {
+            color: white;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        #infoForm div {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #444;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .upload-section {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn.danger {
+            background: #ff4444;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .upload-btn+.upload-btn {
+            margin-left: 10px;
+        }
+
+        #uploadStatus {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 4px;
+        }
+
+        #uploadStatus:empty {
+            opacity: 0;
+            padding: 0;
+            height: 0;
+        }
+
+        .action-buttons {
+            margin: 25px 0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .success-status {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .error-status {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .question-table {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table-header>div {
+            font-weight: 500;
+            color: #666;
+        }
+
+        .table-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .question-row {
+            display: flex;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .question-row>div {
+            padding: 0 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .question-row:hover {
+            background: #fafafa;
+        }
+
+        .table-header>div:nth-child(1),
+        .question-row>div:nth-child(1) {
+            width: 40%;
+        }
+
+        .table-header>div:nth-child(2),
+        .question-row>div:nth-child(2) {
+            width: 20%;
+        }
+
+        .table-header>div:nth-child(3),
+        .question-row>div:nth-child(3) {
+            width: 15%;
+        }
+
+        .table-header>div:nth-child(4),
+        .question-row>div:nth-child(4) {
+            width: 15%;
+        }
+
+        .table-header>div:nth-child(5),
+        .question-row>div:nth-child(5) {
+            width: 10%;
+        }
+
+        @media (max-width: 768px) {
+            .question-table {
+                font-size: 14px;
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .question-row {
+                flex-wrap: wrap;
+                padding: 10px;
+            }
+
+            .question-row>div {
+                width: 100% !important;
+                padding: 6px !important;
+                white-space: normal;
+            }
+
+            .question-row>div::before {
+                content: attr(data-label);
+                display: inline-block;
+                width: 80px;
+                color: #666;
+                font-weight: 500;
+                margin-right: 8px;
+            }
+
+            .question-row>div:nth-child(4) {
+                display: none;
+            }
+        }
+
+        .rank-nav {
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .rank-nav button {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #e4e6eb;
+            transition: all 0.2s;
+        }
+
+        .rank-nav button:not(.active) {
+            background: #f0f2f5;
+        }
+
+        .rank-nav button.active {
+            color: white;
+            border-color: transparent;
+        }
+
+        .rank-container {
+            position: relative;
+            min-height: 200px;
+        }
+
+        #rankStatus {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .status-loading {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .question-table .table-header>div,
+        .question-table .question-row>div {
+            padding: 12px 15px;
+            /* 增加单元格内边距 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 80px;
+            /* 设置最小宽度 */
+        }
+
+        /* 调整列宽比例 */
+        .question-table .table-header>div:nth-child(1),
+        .question-table .question-row>div:nth-child(1) {
+            width: 35%;
+            /* 题目内容 */
+        }
+
+        .question-table .table-header>div:nth-child(2),
+        .question-table .question-row>div:nth-child(2) {
+            width: 20%;
+            /* 选项 */
+        }
+
+        .question-table .table-header>div:nth-child(3),
+        .question-table .question-row>div:nth-child(3) {
+            width: 15%;
+            /* 答案 */
+        }
+
+        .question-table .table-header>div:nth-child(4),
+        .question-table .question-row>div:nth-child(4) {
+            width: 10%;
+            /* 限时 */
+            text-align: center;
+        }
+
+        .question-table .table-header>div:nth-child(5),
+        .question-table .question-row>div:nth-child(5) {
+            width: 10%;
+            /* 分值 */
+            text-align: right;
+        }
+
+        .question-table .table-header>div:nth-child(6),
+        .question-table .question-row>div:nth-child(6) {
+            width: 10%;
+            /* 最低分值 */
+            text-align: right;
+        }
+    </style>
+    <script src="/basic.js"></script>
+    <link href="/css/leaderboard.css" rel="stylesheet">
+    <script src="/js/leaderboard.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>比赛编辑 - <span id="quizName"></span></h1>
+        <div id="status" class="status-pending"></div>
+
+        <nav id="topnav">
+            <button data-tab="info" class="active">基本信息</button>
+            <button data-tab="problems">题目管理</button>
+            <button data-tab="rank">排行榜</button>
+            <button id="startBtn">开始比赛</button>
+        </nav>
+
+        <div id="info" class="tab-content active">
+            <form id="infoForm" onsubmit="saveInfo(event)">
+                <div>
+                    <label>比赛名称：</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div>
+                    <label>比赛日期：</label>
+                    <input type="date" id="quizDate" required>
+                </div>
+                <div>
+                    <label>邀请码：</label>
+                    <input type="text" id="inviteCode" required>
+                </div>
+                <div>
+                    <label>答题须知：</label>
+                    <textarea id="notice" rows="6"></textarea>
+                </div>
+                <div>
+                    <label>一等奖数量：</label>
+                    <input type="number" id="firstPrizeCount" required>
+                </div>
+                <div>
+                    <label>二等奖数量：</label>
+                    <input type="number" id="secondPrizeCount" required>
+                </div>
+                <div>
+                    <label>三等奖数量：</label>
+                    <input type="number" id="thirdPrizeCount" required>
+                </div>
+                <button type="submit">保存修改</button>
+            </form>
+        </div>
+
+        <div id="problems" class="tab-content">
+            <h3>题目管理</h3>
+            <div class="upload-section" id="uploadArea">
+                <div id="fileInputLabel">
+                    <p>支持格式：.xlsx（Excel文件）</p>
+                    <p>模板格式：题型 | 分值 | 最低分值 | 时间限制(分钟) | 题目内容 | 选项范围 | 正确答案</p>
+                    <p>示例：单选题 | 100 | 20 | 1.5 | 题目内容... | A-D | C</p>
+                </div>
+                <input type="file" id="excelUpload" accept=".xlsx" hidden>
+                <button onclick="document.getElementById('excelUpload').click()" class="upload-btn">
+                    <i class="fa-regular fa-file-excel"></i> 选择Excel文件
+                </button>
+                <span id="fileName" style="margin-left:10px"></span>
+                <div id="uploadStatus"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="initialUploadBtn" class="upload-btn" style="display:none"><i
+                        class="fa-solid fa-arrow-up-from-bracket"></i> 开始导入</button>
+                <button id="downloadTemplateBtn" class="upload-btn" style="display:none"><i
+                        class="fa-solid fa-download"></i> 下载模板</button>
+                <button id="reuploadBtn" class="upload-btn danger" style="display:none"><i
+                        class="fa-solid fa-trash"></i> 全部删除</button>
+            </div>
+
+            <div id="questionList" style="display:none;">
+                <div class="list-header">
+                    <h4>已上传题目（共<span id="totalCount">0</span>题）</h4>
+                </div>
+                <div class="question-table">
+                    <div class="table-header">
+                        <div>题目内容</div>
+                        <div>选项</div>
+                        <div>答案</div>
+                        <div>限时</div>
+                        <div>分值</div>
+                        <div>最低分值</div>
+                    </div>
+                    <div class="table-body" id="questionTableBody"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="rank" class="tab-content">
+            <h3>排行榜</h3>
+            <nav class="rank-nav" id="rankNav"></nav>
+            <div class="rank-container">
+                <ul class="leaderboard" id="leaderboard">
+                    <!-- 动态生成内容 -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const quizId = new URLSearchParams(location.search).get('id');
+        let selectedFile = null;
+
+        // 事件监听初始化
+        function initEventListeners() {
+            // 标签切换
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.addEventListener('click', () => showTab(btn.dataset.tab)); // 包含对rank按钮的监听
+            });
+
+            // 文件选择
+            document.getElementById('excelUpload').addEventListener('change', function (e) {
+                selectedFile = e.target.files[0];
+                document.getElementById('fileName').textContent = selectedFile?.name || '';
+            });
+
+            // 按钮事件
+            document.getElementById('initialUploadBtn').addEventListener('click', () => uploadExcel(false));
+            document.getElementById('reuploadBtn').addEventListener('click', confirmReupload);
+            document.getElementById('startBtn').addEventListener('click', startQuiz);
+
+            // 排行榜按钮事件
+            document.getElementById('rankNav').addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const type = e.target.dataset.type;
+                    const questionId = e.target.dataset.qid;
+                    showRank(type, questionId);
+                }
+            });
+
+            // 下载模板按钮事件
+            document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+                window.location.href = '/quiz/download-template';
+            });
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.toggle('active', tab.id === tabName); // 当tabName="rank"时会激活对应内容
+            });
+            document.querySelectorAll('#topnav button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+        }
+
+        async function loadQuizInfo() {
+            try {
+                const res = await fetch(`/quiz/${quizId}`);
+                const { data } = await res.json();
+                console.log('date', data.quiz_date);
+                document.getElementById('quizName').textContent = data.name;
+                document.getElementById('name').value = data.name;
+                document.getElementById('inviteCode').value = data.invite_code;
+                document.getElementById('notice').value = data.notice || '';
+                document.getElementById('firstPrizeCount').value = data.first_prize_num || 0;
+                document.getElementById('secondPrizeCount').value = data.second_prize_num || 0;
+                document.getElementById('thirdPrizeCount').value = data.third_prize_num || 0;
+                document.getElementById('quizDate').value = data.quiz_date
+                    ? new Date(data.quiz_date).toISOString().split('T')[0] // 转换为 YYYY-MM-DD 格式
+                    : '';
+
+                const statusElem = document.getElementById('status');
+                statusElem.className = `status-${data.status}`;
+
+                // 添加 ended 状态处理
+                statusElem.textContent = data.status === 'active'
+                    ? `已开始（${data.started_at}）`
+                    : data.status === 'ended'  // 新增判断
+                        ? `已结束（${data.ended_at}）`
+                        : `未开始（创建于 ${data.created_at}）`;
+
+                // 如果比赛已结束，禁用开始按钮
+                document.getElementById('startBtn').disabled =
+                    data.status !== 'pending' && data.status !== 'ended';
+
+            } catch {
+                showUploadStatus('加载失败', 'error');
+            }
+        }
+
+        async function saveInfo(e) {
+            e.preventDefault();
+            try {
+                const res = await fetch('/quiz/manage/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: quizId,
+                        name: document.getElementById('name').value,
+                        invite_code: document.getElementById('inviteCode').value,
+                        notice: document.getElementById('notice').value,
+                        first_prize_num: parseInt(document.getElementById('firstPrizeCount').value.trim()) || 0,
+                        second_prize_num: parseInt(document.getElementById('secondPrizeCount').value.trim()) || 0,
+                        third_prize_num: parseInt(document.getElementById('thirdPrizeCount').value.trim()) || 0,
+                        quiz_date: document.getElementById('quizDate').value
+                    })
+                });
+                res.ok ? showUploadStatus('保存成功', 'success') : showUploadStatus(`失败: ${(await res.json()).error}`, 'error');
+                loadQuizInfo();
+            } catch {
+                showUploadStatus('网络错误', 'error');
+            }
+        }
+
+        async function uploadExcel(isReupload = false) {
+            const uploadBtn = isReupload ? document.getElementById('reuploadBtn') : document.getElementById('initialUploadBtn');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> 处理中...';
+
+            try {
+                if (isReupload) {
+                    // 先执行删除并更新UI
+                    if (!(await deleteAllQuestions())) throw new Error('删除旧题失败');
+                    showUploadStatus('已清空所有题目', 'success');
+                    if (!selectedFile) return; // 允许仅删除不上传
+                }
+
+                if (selectedFile) { // 如果有文件才上传
+                    const formData = new FormData();
+                    formData.append('excel', selectedFile);
+                    formData.append('quizId', quizId);
+
+                    const res = await fetch('/quiz/upload-questions', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await res.json();
+                    if (!res.ok) throw new Error(result.error);
+
+                    showUploadStatus(`成功导入 ${result.added} 道题目`, 'success');
+                    setTimeout(() => loadQuestions(), 1500);
+                }
+            } catch (error) {
+                showUploadStatus(`失败: ${error.message}`, 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = isReupload ? '<i class="fa-solid fa-trash"></i> 删除题目' : '<i class="fa-solid fa-arrow-up-from-bracket"></i> 开始导入';
+            }
+        }
+        function confirmReupload() {
+            if (confirm('⚠️ 将删除所有现有题目，确定继续吗？')) deleteAllQuestions();
+        }
+
+        async function deleteAllQuestions() {
+            try {
+                const success = await fetch(`/quiz/${quizId}/questions`, {
+                    method: 'DELETE'
+                }).then(res => res.ok);
+
+                if (success) {
+                    // 立即强制更新UI状态
+                    document.getElementById('questionTableBody').innerHTML = '';
+                    document.getElementById('totalCount').textContent = '0';
+                    document.getElementById('initialUploadBtn').style.display = 'inline-block';
+                    document.getElementById('downloadTemplateBtn').style.display = 'inline-block';
+                    document.getElementById('reuploadBtn').style.display = 'none';
+                    document.getElementById('uploadArea').style.display = 'block';
+                    document.getElementById('questionList').style.display = 'none';
+                }
+                return success;
+            } catch {
+                return false;
+            }
+        }
+
+        async function loadQuestions() {
+            try {
+                const res = await fetch(`/quiz/${quizId}/questions`);
+                const { data } = await res.json();
+                document.getElementById('questionTableBody').innerHTML = data.map(q => `
+                <div class="question-row">
+                    <div data-label="题目内容">${q.content}</div>
+                    <div data-label="选项">${q.options.join(', ')}</div>
+                    <div data-label="答案">${q.answer.join(', ')}</div>
+                    <div data-label="限时">${q.time_limit} 分钟</div>
+                    <div data-label="分值">${q.score}</div>
+                    <div data-label="最低分值">${q.lowestScore}</div>
+                </div>
+            `).join('');
+
+                // 动态绑定详情切换
+                document.querySelectorAll('.detail-toggle').forEach((toggle, index) => {
+                    toggle.addEventListener('click', () => {
+                        const detail = toggle.parentElement.nextElementSibling;
+                        detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+                    });
+                });
+
+                const hasQuestions = data.length > 0;
+                document.getElementById('initialUploadBtn').style.display = hasQuestions ? 'none' : 'inline-block';
+                document.getElementById('downloadTemplateBtn').style.display = hasQuestions ? 'none' : 'inline-block';
+                document.getElementById('reuploadBtn').style.display = hasQuestions ? 'inline-block' : 'none';
+                document.getElementById('uploadArea').style.display = hasQuestions ? 'none' : 'block';
+                document.getElementById('questionList').style.display = hasQuestions ? 'block' : 'none';
+                document.getElementById('totalCount').textContent = data.length;
+            } catch {
+                showUploadStatus('题目加载失败', 'error');
+            }
+        }
+
+        function showUploadStatus(message, type = 'info') {
+            const elem = document.getElementById('uploadStatus');
+
+            // 先清除之前的样式
+            elem.className = '';
+
+            // 添加新样式
+            elem.classList.add(`${type}-status`);
+            elem.textContent = message;
+
+            // 同时清除样式和内容
+            setTimeout(() => {
+                elem.className = '';
+                elem.textContent = '';
+            }, 1500);
+        }
+
+        // 正确的跳转逻辑示例
+        async function startQuiz() {
+            try {
+                // 1. 先发送启动请求
+                const res = await fetch(`/quiz/${quizId}/start`);
+
+                // 2. 必须检查响应状态
+                if (!res.ok) {
+                    const error = await res.json();
+                    throw new Error(error.message || '启动失败');
+                }
+
+                // 3. 请求成功后才跳转
+                window.location.href = `/admin/info?id=${quizId}`;
+            } catch (error) {
+                console.error('跳转失败:', error);
+                alert(`错误: ${error.message}`);
+            }
+        }
+
+        async function loadQuestionsForRank() {
+            try {
+                const res = await fetch(`/quiz/${quizId}/questions`);
+                const { data } = await res.json();
+                console.log(data);
+                console.log(111);
+                const nav = document.getElementById('rankNav');
+
+                // 生成导航按钮
+                let buttons = [
+                    `<button data-type="total" class="active">总分</button>`
+                ];
+                data.forEach((q, i) => {
+                    buttons.push(`<button data-type="question" data-qid="${q.id}">${i + 1}</button>`);
+                });
+                nav.innerHTML = buttons.join('');
+
+                // 默认加载总分
+                showRank('total');
+            } catch {
+                showRankStatus('题目加载失败', 'error');
+            }
+        }
+
+        async function showRank(type, questionId) {
+            // 更新按钮激活状态
+            document.querySelectorAll('#rankNav button').forEach(btn => {
+                const isActive = btn.dataset.type === type &&
+                    (type !== 'question' || btn.dataset.qid === questionId);
+                btn.classList.toggle('active', isActive);
+            });
+
+            try {
+                const endpoint = type === 'total'
+                    ? `/quiz/${quizId}/quiz_rank`
+                    : `/quiz/${questionId}/question_rank`;
+                loadLeaderboard(endpoint, true);
+                console.log(endpoint);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const res = await fetch('/quiz/quizzes');
+                if (!res.ok) {
+                    location.href = '/login';
+                    return;
+                }
+            } catch {
+                location.href = '/login';
+                return;
+            }
+
+            initEventListeners();
+            loadQuizInfo();
+            loadQuestions();
+            loadQuestionsForRank(); // 只在页面加载时调用一次
+        });
+    </script>
+</body>
+
+</html>

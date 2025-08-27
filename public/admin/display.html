@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>比赛 - 答题系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/leaderboard.css">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .quiz-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .question-meta {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            max-width: 60%;
+        }
+
+        .end-button {
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .end-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .end-button.danger {
+            background: rgba(244, 67, 54, 0.9);
+            border-color: rgba(244, 67, 54, 0.7);
+        }
+
+        .end-button.danger:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 2rem;
+            padding: 2rem;
+            overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #timer {
+            font-size: 8rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            margin: 0.5rem 0;
+        }
+
+        .question-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            flex: 3;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .question-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .question-content img {
+            max-height: 100vh;
+            width: auto;
+            max-width: 90%;
+            margin: 1rem auto;
+            display: block;
+        }
+
+        .leaderboard-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+            flex: 1;
+            min-width: 400px;
+        }
+
+        .leaderboard {
+            padding: 0;
+        }
+
+        .question-panel.stopped {
+            background: #c62828;
+        }
+
+        #timer.stopped {
+            display: none !important;
+        }
+
+        .question-content.stopped {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 验证码容器 */
+        .captcha-container {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+
+        .captcha-label {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .captcha-code {
+            font-size: 2.5rem !important;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #FFEB3B;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .header-controls {
+                max-width: 100%;
+                justify-content: flex-start;
+            }
+
+            .end-button {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+
+            .captcha-container {
+                position: static;
+                transform: none;
+                order: -1;
+                width: 100%;
+                justify-content: center;
+                margin-top: 0.5rem;
+            }
+
+            .captcha-code {
+                font-size: 2rem !important;
+            }
+        }
+
+        /* 响应式调整 */
+        @media (min-width: 1600px) {
+            .main-content {
+                gap: 3rem;
+                padding: 3rem;
+            }
+
+            #timer {
+                font-size: 10rem;
+            }
+
+            .question-content {
+                font-size: 1.2rem;
+            }
+
+            .leaderboard-panel {
+                flex: 1.2;
+            }
+        }
+
+        @media (min-width: 2000px) {
+            .main-content {
+                gap: 4rem;
+                padding: 4rem;
+            }
+
+            #timer {
+                font-size: 12rem;
+            }
+
+            .question-content {
+                font-size: 1.5rem;
+            }
+
+            .leaderboard-panel {
+                flex: 1.5;
+            }
+        }
+
+        /* 新增提示样式 */
+        #confirmTip {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: none;
+            font-size: 14px;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+    </style>
+    <script src="/basic.js"></script>
+    <script src="/time.js"></script>
+    <script src="/js/leaderboard.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="quiz-title" id="quizTitle"></div>
+                    <div class="question-meta" id="questionMeta"></div>
+                </div>
+                <div class="captcha-container">
+                    <span class="captcha-label">邀请码：</span>
+                    <span id="currentCaptcha" class="captcha-code"></span>
+                </div>
+                <div class="header-controls">
+                    <button class="end-button" id="restartButton" onclick="restart()">
+                        <i class="fa-solid fa-sync"></i> 重新开始
+                    </button>
+                    <button class="end-button" id="randomSelectButton" onclick="randomSelectUser()">
+                        🎲 随机选择
+                    </button>
+                    <button class="end-button" id="controlButton" onclick="stopQuestion()">
+                        ⏹ 截止答题
+                    </button>
+                    <button class="end-button danger" id="endQuizButton" onclick="endQuiz()">
+                        ⏹ 结束比赛
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="question-panel">
+                <div id="timer">00:00</div>
+                <div class="question-content" id="questionContent"></div>
+            </div>
+
+            <div class="leaderboard-panel">
+                <h2>🏆 实时排名</h2>
+                <ul class="leaderboard" id="leaderboard">
+                    <li>暂无参赛者数据</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <div id="confirmTip">再次点击以确认</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+        const socket = io();
+        let countdownInterval, endtime;
+        let currank = [];
+        let questionId;
+
+        async function loadQuizInfo() {
+            try {
+                const response = await fetch(`/quiz/${quizId}`);
+                const { data } = await response.json();
+                document.getElementById('quizTitle').textContent = data.name;
+                document.title = data.name;
+                document.getElementById('currentCaptcha').textContent = data.invite_code || '----';
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function restart() {
+            if (!confirm('确认要重新开始比赛吗？')) return;
+
+            socket.emit('restart-quiz', { quizId }, () => {
+                socket.emit('admin-control', {
+                    type: 'START_QUIZ',
+                    quizId
+                }, callback);
+            });
+            location.reload();
+        }
+
+        function stopQuestion() {
+            socket.emit('admin-control', {
+                type: 'STOP_QUESTION',
+                quizId
+            })
+
+            clearInterval(countdownInterval);
+
+            const timer = document.getElementById('timer');
+            timer.classList.add('stopped');
+
+            const controlButton = document.getElementById('controlButton');
+            controlButton.textContent = '⏭ 下一题';
+            controlButton.onclick = nextQuestion;
+        }
+
+        async function loadQuestion() {
+            try {
+                const response = await fetch(`/quiz/${quizId}/question`);
+                const { success, question } = await response.json();
+                if (!success) {
+                    stopQuestion();
+                    return;
+                }
+                const questionPanel = document.querySelector('.question-panel');
+                const timer = document.getElementById('timer');
+                const content = document.querySelector('.question-content');
+                questionPanel.classList.remove('stopped');
+                timer.classList.remove('stopped');
+                content.classList.remove('stopped');
+                const controlButton = document.getElementById('controlButton');
+                controlButton.textContent = '⏹ 截止答题';
+                controlButton.onclick = stopQuestion;
+                if (!question) {
+                    window.location.href = `/admin/end?id=${quizId}`;
+                    return;
+                }
+
+                questionId = question.id;
+
+                document.getElementById('questionMeta').textContent =
+                    `题型：${question.type} | 分值：${question.score}分`;
+
+                let contentElement;
+                if (/\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(question.content)) {
+                    contentElement = `
+            <img src="${question.content}" 
+                 alt="题目图片" 
+                 onerror="this.onerror=null;this.parentElement.innerHTML='<h3>图片加载失败</h3>'">`;
+                } else {
+                    contentElement = `<h3 style="font-size: 1.8rem;">${question.content}</h3>`;
+                }
+
+                document.getElementById('questionContent').innerHTML = contentElement;
+                startCountdown(question.endtime);
+            } catch (error) {
+                console.error('加载题目失败:', error);
+            }
+        }
+
+        function setupSocket(callback) {
+            socket.on('query-endtime', (callback) => {
+                console.log('query-endtime');
+                console.log(endtime);
+                console.log(callback);
+                callback({ endtime });
+            });
+
+            socket.emit('admin-join', { quizId }, () => {
+                socket.emit('admin-control', {
+                    type: 'START_QUIZ',
+                    quizId
+                }, callback);
+            });
+
+            socket.on('correct', (res) => {
+                const rk = currank.length + 1;
+                console.log(res.username);
+                currank.push({ name: res.username, score: res.score.toFixed(2) });
+                updateLeaderboard();
+            });
+        }
+
+        function startCountdown(edt) {
+            endtime = new Date(edt);
+            console.log(endtime);
+            console.log(time);
+            clearInterval(countdownInterval);
+            let remaining = Math.floor((endtime - time) / 1000);
+            const timer = document.getElementById('timer');
+
+            const update = () => {
+                const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+                const secs = (remaining % 60).toString().padStart(2, '0');
+                timer.textContent = `${mins}:${secs}`;
+                timer.style.color = remaining <= 10 ? '#f44336' : 'var(--primary-color)';
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    stopQuestion();
+                }
+                remaining = Math.floor((endtime - time) / 1000);
+            };
+
+            update();
+            countdownInterval = setInterval(update, 100);
+        }
+
+        async function nextQuestion() {
+            socket.emit('admin-control', {
+                type: 'NEXT_QUESTION',
+                quizId
+            });
+            const response = await fetch(`/quiz/${quizId}/question`);
+            const { isEnd } = await response.json();
+            console.log(isEnd);
+            if (isEnd) {
+                await fetch(`/quiz/${quizId}/end`, { method: 'POST' });
+                window.location.href = `/admin/end?id=${quizId}`;
+                return;
+            }
+            await loadQuestion();
+            currank = [];
+            await getRank();
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            const leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = '';
+
+            const sorted = currank.sort((a, b) => b.score - a.score);
+
+            sorted.forEach((user, index) => {
+                const li = document.createElement('li');
+                li.className = 'player-card';
+                if (index === 0) li.classList.add('gold');
+                else if (index === 1) li.classList.add('sliver');
+                else if (index === 2) li.classList.add('bronze');
+
+                li.innerHTML = `
+          <div class="rank-badge">${index + 1}</div>
+          <div class="player-info">
+            <span class="player-name">${user.name}</span>
+            <span class="player-score">${user.score}分</span>
+          </div>
+          ${index < 3 ? `<i class="fas fa-medal medal ${index === 0 ? 'gold' : index === 1 ? 'sliver' : 'bronze'}"></i>` : ''}
+        `;
+                leaderboard.appendChild(li);
+            });
+        }
+
+        async function getRank() {
+            try {
+                const response = await fetch(`/quiz/${questionId}/question_rank`);
+                const { success, rank, userId } = await response.json(); // 假设接口返回当前userId
+
+                if (!success) throw new Error('获取排名失败');
+
+                // 生成完整排行榜
+                rank.forEach((item, index) => {
+                    if (item.score !== 0) {
+                        currank.push({ name: item.user_name, score: item.score.toFixed(2) });
+                    }
+                });
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function randomSelectUser() {
+            if (currank.length === 0) {
+                alert('当前没有参赛者数据！');
+                return;
+            }
+
+            // 创建排序副本确保与DOM顺序一致
+            const sorted = [...currank].sort((a, b) => b.score - a.score);
+            const randomIndex = Math.floor(Math.random() * sorted.length);
+            const selectedUser = sorted[randomIndex];
+
+            const leaderboard = document.getElementById('leaderboard');
+            const playerCards = leaderboard.getElementsByClassName('player-card');
+
+            if (playerCards.length <= randomIndex) return;
+            const selectedCard = playerCards[randomIndex];
+
+            // 清除之前的高亮
+            document.querySelectorAll('.player-card.highlight').forEach(card => {
+                card.classList.remove('highlight');
+            });
+
+            // 添加高亮并滚动
+            selectedCard.classList.add('highlight');
+            selectedCard.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+        async function endQuiz() {
+            if (!confirm('确定要直接结束整个比赛吗？此操作不可撤销！')) return;
+
+            try {
+                await fetch(`/quiz/${quizId}/end`, { method: 'POST' });
+                socket.emit('admin-control', {
+                    type: 'NEXT_QUESTION',
+                    quizId
+                });
+                window.location.href = `/admin/end?id=${quizId}`;
+            } catch (error) {
+                console.error(error);
+                alert('结束比赛失败:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupSocket(async () => {
+                await loadQuizInfo();
+                await loadQuestion();
+                await getRank();
+                updateLeaderboard();
+            });
+        });
+
+        // 新增状态变量
+        let isWaitingForSecondClick = false;
+        let pendingDirection = null;
+        let timer = null;
+        const confirmTip = document.getElementById('confirmTip');
+
+        // 修改后的键盘监听
+        document.addEventListener('keydown', (event) => {
+            const key = event.key;
+
+            if (key === 'Enter') document.getElementById('controlButton').click();
+
+            // 仅处理翻页相关按键
+            if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown'].includes(key)) return;
+
+            event.preventDefault();
+
+            // 确定翻页方向
+            const isPrev = ['ArrowLeft', 'PageUp', 'ArrowUp'].includes(key);
+
+            if (isWaitingForSecondClick) {
+                // 第二次点击
+                if ((isPrev && pendingDirection === 'prev') ||
+                    (!isPrev && pendingDirection === 'next')) {
+                    clearTimeout(timer);
+                    hideConfirmTip();
+                    performPageTurn(isPrev);
+                }
+            } else if (!isPrev) {
+                // 第一次点击
+                showConfirmTip();
+                pendingDirection = isPrev ? 'prev' : 'next';
+                isWaitingForSecondClick = true;
+
+                // 设置3秒后重置状态
+                timer = setTimeout(() => {
+                    resetClickState();
+                }, 3000);
+            } else {
+                performPageTurn(isPrev);
+            }
+        });
+
+        // 执行实际翻页
+        function performPageTurn(isPrev) {
+            resetClickState();
+            if (!isPrev) {
+                document.getElementById('controlButton').click();
+            } else {
+                document.getElementById('randomSelectButton').click();
+            }
+        }
+
+        // 显示提示
+        function showConfirmTip() {
+            confirmTip.style.display = 'block';
+        }
+
+        // 隐藏提示
+        function hideConfirmTip() {
+            confirmTip.style.display = 'none';
+        }
+
+        // 重置点击状态
+        function resetClickState() {
+            isWaitingForSecondClick = false;
+            pendingDirection = null;
+            hideConfirmTip();
+            clearTimeout(timer);
+        }
+    </script>
+</body>
+
+</html>

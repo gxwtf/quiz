@@ -1,0 +1,123 @@
+<!-- admin/notice.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>比赛须知 - 答题系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--background);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .quiz-title {
+            font-size: 2.5rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .notice-content {
+            flex: 1;
+            padding: 2rem;
+            width: 90%;
+            margin: 0 auto;
+            overflow-y: auto;
+        }
+
+        .notice-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-button {
+            padding: 1.2rem 3rem;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 2rem auto;
+            display: block;
+        }
+
+        .action-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+    <script src="/basic.js"></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="quiz-title" id="quizTitle">比赛须知</h1>
+        </div>
+
+        <div class="notice-content">
+            <div class="notice-text" id="quizNotice"><i class="fa-solid fa-hourglass-half"></i> 加载中...</div>
+        </div>
+
+        <button class="action-button" onclick="startQuiz()">开始比赛</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+
+        async function loadNotice() {
+            try {
+                const response = await fetch(`/quiz/${quizId}`);
+                const { data } = await response.json();
+                document.getElementById('quizTitle').textContent = data.name;
+                document.title = data.name;
+                document.getElementById('quizNotice').textContent = data.notice || "暂无特别注意事项";
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function startQuiz() {
+            window.location.href = `display?id=${quizId}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', loadNotice);
+    </script>
+</body>
+
+</html>

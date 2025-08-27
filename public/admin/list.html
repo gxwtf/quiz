@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>比赛管理 - 答题系统</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+        }
+
+        a.create-btn {
+            background: #2196f3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            transition: background 0.3s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        a.create-btn:hover {
+            background: #1976d2;
+            text-decoration: none;
+            color: white;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+            font-size: 28px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #quizTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #quizTable th {
+            background-color: #f8f9fa;
+            color: #666;
+            font-weight: 600;
+            text-align: left;
+            padding: 16px;
+            border-bottom: 2px solid #eee;
+        }
+
+        #quizTable td {
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            color: #444;
+        }
+
+        #quizTable tr:hover {
+            background-color: #fafafa;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-ended {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            #quizTable th,
+            #quizTable td {
+                padding: 12px;
+            }
+
+            #quizTable thead {
+                display: none;
+            }
+
+            #quizTable tr {
+                display: block;
+                margin-bottom: 16px;
+                border: 1px solid #eee;
+                border-radius: 4px;
+            }
+
+            #quizTable td {
+                display: flex;
+                justify-content: space-between;
+                border-bottom: none;
+            }
+
+            #quizTable td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #666;
+                margin-right: 16px;
+            }
+        }
+
+        .header {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            min-height: 80px;
+            align-content: center;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .site-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .user-toggle {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #444;
+        }
+
+        .user-toggle:hover {
+            background: #f8f9fa;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            min-width: 160px;
+            display: none;
+            padding: 8px 0;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            color: #444;
+            text-decoration: none;
+            display: block;
+            transition: background 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+        }
+
+        body {
+            padding-top: 0;
+        }
+
+        .container {
+            margin-top: 30px;
+        }
+    </style>
+    <script src='/basic.js'></script>
+    <link rel="stylesheet" href="https://fastly.jsdelivr.net/npm/font-awesome@4/css/font-awesome.min.css">
+</head>
+
+<body>
+    <nav class="header">
+        <div class="nav-container">
+            <div class="site-name">答题系统</div>
+            <div class="user-menu">
+                <button class="user-toggle" onclick="toggleMenu()">
+                    <span id="username">用户名</span>
+                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="#" class="dropdown-item" onclick="logout()">登出</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>比赛列表</h1>
+        <div style="margin-bottom: 24px; display: flex; justify-content: left; gap:20px; align-items: center;">
+            <a href="/list" class="create-btn"><i class="fa-regular fa-user"></i> 用户模式</a>
+            <a href="/admin/new" class="create-btn"><i class="fa-solid fa-plus"></i> 创建比赛</a>
+        </div>
+        <table id="quizTable">
+            <thead>
+                <tr>
+                    <th>名称</th>
+                    <th>比赛日期</th>
+                    <th>邀请码</th>
+                    <th>状态</th>
+                    <th>参与人数</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadQuizzes() {
+            try {
+                const res = await fetch('/quiz/quizzes');
+                const { data } = await res.json();
+                const tbody = document.querySelector('#quizTable tbody');
+                tbody.innerHTML = data.map(quiz => `
+          <tr>
+            <td data-label="名称">${quiz.name}</td>
+            <td data-label="比赛日期">${quiz.quiz_date}</td>
+            <td data-label="邀请码">${quiz.invite_code}</td>
+            <td data-label="状态">
+              <span class="status status-${quiz.status}">
+                ${getStatusText(quiz.status)}
+              </span>
+            </td>
+            <td data-label="参与人数">${quiz.participant_num}</td>
+            <td data-label="操作">
+              <div>
+                <a href="/admin/manage?id=${quiz.id}">管理</a>
+                <a href="javascript:deleteQuiz('${quiz.id}','${quiz.name}');" style="color:#ff0000;margin:10px;">删除</a>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                pending: '准备中',
+                active: '进行中',
+                ended: '已结束'
+            };
+            return statusMap[status] || '未知状态';
+        }
+
+        async function deleteQuiz(id, name) {
+            if (window.confirm(`确定删除 ${name}?`)) {
+                await fetch(`/quiz/${id}/quizzes`, {
+                    method: 'DELETE'
+                });
+                location.reload();
+            }
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('dropdownMenu');
+            menu.classList.toggle('show');
+        }
+
+        window.onclick = function (event) {
+            if (!event.target.closest('.user-menu')) {
+                document.getElementById('dropdownMenu').classList.remove('show');
+            }
+        }
+
+        async function logout() {
+            const response = await fetch('/logout', { method: 'POST' });
+            if (!response.ok) {
+                alert('登出失败');
+                return;
+            }
+            location.replace('/');
+        }
+
+        window.onload = loadQuizzes;
+    </script>
+</body>
+
+</html>

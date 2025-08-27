@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答题系统</title>
+    <script>
+        async function redirect() {
+            try {
+                const res = await fetch('/quiz/verify/identification', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) {
+                    location.replace(`/login`);
+                    return;
+                }
+                if (data.admin) {
+                    location.replace('/admin/list');
+                } else if (window.innerWidth <= 768) {
+                    location.replace('/list_mobile');
+                } else {
+                    location.replace('/list');
+                }
+            } catch (error) {
+                console.error('重定向失败:', error);
+                location.replace('/login');
+            }
+        }
+        redirect();
+    </script>
+</head>
+
+<body>
+    <h1>正在重定向，请稍候...</h1>
+</body>
+
+</html>

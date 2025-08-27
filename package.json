@@ -1,0 +1,27 @@
+{
+  "name": "quiz",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node app.js --env-file-if-exists=.env",
+    "dev": "nodemon app.js -- --env-file-if-exists=.env",
+    "debug": "node --inspect-brk app.js --env-file-if-exists=.env"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "bcrypt": "^6.0.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.2",
+    "mysql2": "^3.14.1",
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.17.1",
+    "session-file-store": "^1.5.0",
+    "socket.io": "^4.8.1",
+    "upgrade": "^1.1.0",
+    "uuid": "^11.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

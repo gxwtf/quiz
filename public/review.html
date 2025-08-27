@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1">
+    <title>比赛回顾 - 答题系统</title>
+    <link href="/css/leaderboard.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --correct-color: #4CAF50;
+            --wrong-color: #f44336;
+            --default-color: #607D8B;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background);
+            display: flex;
+            gap: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            flex: 1;
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            margin-bottom: 40px;
+        }
+
+        .sidebar {
+            flex: 0.618;
+            background: var(--surface);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text-primary);
+            margin: 0 0 25px;
+            /* 更新margin */
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 更新状态样式 */
+        #status {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 25px;
+            /* 添加margin-bottom */
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-ended {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .question-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin: 25px 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .question-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s;
+            background: var(--default-color);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .question-btn.correct {
+            background: var(--correct-color);
+        }
+
+        .question-btn.wrong {
+            background: var(--wrong-color);
+        }
+
+        .question-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .answer-section p {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .answer-section .user-answer {
+            color: var(--wrong-color);
+        }
+
+        .answer-section .correct-answer {
+            color: var(--correct-color);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                flex-direction: column;
+                gap: 15px;
+                overflow-y: auto;
+            }
+
+            .container {
+                flex: none;
+                padding: 15px;
+                margin-bottom: 0px;
+            }
+
+            .sidebar {
+                flex: none;
+                padding: 15px;
+                margin-bottom: 0px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .leaderboard {
+                padding: 7px;
+            }
+        }
+    </style>
+    <script src="/basic.js"></script>
+    <script src="/js/leaderboard.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header-section">
+            <h1>比赛回顾 - <span id="quizName"></span></h1>
+            <div id="status" class="status-pending"></div>
+            <div class="time-info" id="timeInfo"></div>
+        </div>
+
+        <div class="question-nav" id="questionNav"></div>
+        <div id="questionDetail"></div>
+    </div>
+
+    <div class="sidebar">
+        <h1>排行榜</h1>
+        <ul class="leaderboard" id="leaderboard"></ul>
+    </div>
+
+    <script>
+        const quizId = new URLSearchParams(location.search).get('id');
+
+        async function loadQuizInfo() {
+            try {
+                const res = await fetch(`/quiz/${quizId}`);
+                const { data } = await res.json();
+
+                document.getElementById('quizName').textContent = data.name;
+                document.title = data.name;
+                const statusElement = document.getElementById('status');
+                statusElement.className = '';
+                statusElement.classList.add(`status-${data.status}`);
+                statusElement.textContent = {
+                    pending: `未开始（创建于 ${data.created_at}）`,
+                    active: `已开始（${data.started_at}）`,
+                    ended: `已结束（${data.ended_at}）`
+                }[data.status];
+
+            } catch {
+                console.error('Failed to load quiz info');
+            }
+        }
+
+        async function loadQuestions() {
+            let res = await fetch(`/quiz/${quizId}/questions`);
+            const { data } = await res.json();
+            return data;
+        }
+
+        async function loadUserSubmissions(questions) {
+            const userSubmissions = {};
+            for (const question of questions) {
+                const res = await fetch(`/quiz/${question.id}/submissions`);
+                if (!res.ok) continue;
+                const { data: submission } = await res.json();
+                userSubmissions[question.id] = submission;
+            }
+            return userSubmissions;
+        }
+
+        function createQuestionButton(question, index, submission) {
+            const btn = document.createElement('button');
+            btn.className = 'question-btn';
+            btn.textContent = index + 1;
+
+            if (!submission) {
+                btn.classList.add('default');
+            } else if (submission.correct == 1) {
+                btn.classList.add('correct');
+            } else {
+                btn.classList.add('wrong');
+            }
+
+            btn.addEventListener('click', () => {
+                loadLeaderboard(`/quiz/${question.id}/question_rank`, false);
+                showQuestionDetail(question, submission);
+            });
+
+            return btn;
+        }
+
+        function showSummary(userSubmissions) {
+            document.getElementById('questionDetail').innerHTML = `
+                <div class="summary-content">
+                    <h3>比赛总结</h3>
+                    <p>提交次数：${Object.keys(userSubmissions).length}</p>
+                    <p>正确题数：${Object.values(userSubmissions).filter(s => s.correct).length}</p>
+                    <p id="userIndex">排名：无</p>
+                    <p id="ratio">超过了 0.00% 的参与者</p>
+                </div>
+            `;
+        }
+
+        function showQuestionDetail(question, submission) {
+            const isImage = question.content.startsWith('http');
+            document.getElementById('questionDetail').innerHTML = `
+                <div class="question-content">
+                    <h3>${isImage ? `<img src="${question.content}" alt="Question Image">` : question.content}</h3>
+                </div>
+                <div class="answer-section">
+                    <p>你的答案：${submission?.answer || '未作答'}</p>
+                    <p class="correct-answer">正确答案：${question.answer}</p>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadQuizInfo();
+            const questions = await loadQuestions();
+            const userSubmissions = await loadUserSubmissions(questions);
+
+            const questionNav = document.getElementById('questionNav');
+
+            // 添加总结按钮
+            const summaryBtn = document.createElement('button');
+            summaryBtn.className = 'question-btn summary';
+            summaryBtn.textContent = '总结';
+            summaryBtn.addEventListener('click', () => {
+                showSummary(userSubmissions);
+                loadLeaderboard(`/quiz/${quizId}/quiz_rank`, false);
+            });
+            questionNav.appendChild(summaryBtn);
+
+            questions.forEach((q, index) => {
+                const submission = userSubmissions[q.id];
+                const btn = createQuestionButton(q, index, submission);
+                questionNav.appendChild(btn);
+            });
+
+            // 默认显示总结
+            showSummary(userSubmissions);
+            loadLeaderboard(`/quiz/${quizId}/quiz_rank`, false);
+        });
+    </script>
+</body>
+
+</html>

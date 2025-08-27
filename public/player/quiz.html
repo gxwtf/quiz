@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>比赛 - 答题系统</title>
+    <meta name="viewport" content="width=device-width,height=device-height,initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2196F3;
+            --secondary-color: #1976D2;
+            --accent-color: #FF4081;
+            --background: #f8f9fa;
+            --surface: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --highlight-color: #FFF3E0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1600px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .header {
+            padding: 1rem 2rem;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .quiz-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .question-meta {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        #timer {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            margin: 0.5rem 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .question-panel {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 95%;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .question-content {
+            flex: 1;
+            overflow-y: auto;
+            /* padding: 1rem; */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .question-content img {
+            max-height: 50vh;
+            width: auto;
+            max-width: 100%;
+            margin: 1rem auto;
+            overflow-y: auto;
+        }
+
+        .answer-input {
+            margin: 1rem 0;
+            padding: 1rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.3);
+        }
+
+        .submit-button {
+            padding: 1rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .submit-button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-button:disabled {
+            background: #90caf9;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 状态样式 */
+        .question-panel.correct {
+            background: #4caf50;
+        }
+
+        .question-panel.incorrect {
+            background: #f44336;
+        }
+
+        .question-panel.stopped {
+            background: #c62828;
+        }
+
+        .question-content.correct,
+        .question-content.incorrect,
+        .question-content.stopped {
+            color: white;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 1rem;
+            }
+
+            .quiz-title {
+                font-size: 1rem;
+            }
+
+            .question-meta {
+                font-size: 0.8rem;
+            }
+
+            #timer {
+                font-size: 2rem;
+            }
+        }
+    </style>
+    <script src="/basic.js"></script>
+    <script src="/time.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="quiz-title" id="quizTitle"></div>
+                    <div class="question-meta" id="questionMeta"></div>
+                </div>
+                <div id="timer">00:00</div>
+            </div>
+        </div>
+
+        <main class="main-content">
+            <div class="question-panel">
+                <div class="question-content" id="questionContent"></div>
+                <input type="text" class="answer-input" id="answerInput" placeholder="请输入答案">
+                <button class="submit-button" id="submitButton" onclick="submitAnswer()">提交答案</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const quizId = urlParams.get('id');
+        const questionIndex = parseInt(urlParams.get('num'), 10) || 0;
+        let questionId;
+        const socket = io();
+        let countdownInterval;
+        let hasAnswered = false;
+        let startTime;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadQuizInfo();
+            loadQuestion();
+            startTime = time;
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') document.getElementById('submitButton').click();
+        });
+
+        async function loadQuizInfo() {
+            try {
+                const response = await fetch(`/quiz/${quizId}`);
+                const { data } = await response.json();
+                document.getElementById('quizTitle').textContent = data.name;
+                document.title = data.name;
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function stopQuestion(prompt = '答题时间结束') {
+            clearInterval(countdownInterval);
+            document.getElementById('timer').innerHTML = ' ';
+
+            const questionPanel = document.querySelector('.question-panel');
+            const content = document.querySelector('.question-content');
+
+            if (!questionPanel.classList.contains('correct') && !questionPanel.classList.contains('incorrect')) {
+                questionPanel.classList.add('stopped');
+                content.classList.add('stopped');
+                content.innerHTML = `<div>${prompt}</div>`;
+            }
+
+            document.getElementById('submitButton').disabled = true;
+            document.getElementById('submitButton').style.display = 'none';
+            document.getElementById('answerInput').style.display = 'none';
+        }
+
+        async function loadQuestion() {
+            try {
+                const response = await fetch(`/quiz/${quizId}/question`);
+                const { question, success, adminOffline } = await response.json();
+                if (adminOffline) {
+                    stopQuestion('管理员还未进入，请稍后');
+                    return;
+                }
+                if (!success) {
+                    stopQuestion();
+                    return;
+                }
+                const questionPanel = document.querySelector('.question-panel');
+                const timer = document.getElementById('timer');
+                const content = document.querySelector('.question-content');
+                questionPanel.classList.remove('stopped', 'correct', 'incorrect');
+                timer.classList.remove('stopped');
+                content.classList.remove('stopped', 'correct', 'incorrect');
+                document.getElementById('submitButton').disabled = null;
+                document.getElementById('submitButton').style.display = '';
+                document.getElementById('answerInput').style.display = '';
+                hasAnswered = false;
+                document.getElementById('answerInput').value = '';
+
+                questionId = question.id;
+                document.getElementById('questionMeta').textContent =
+                    `题型：${question.type} | 分值：${question.score}分`;
+
+                let contentElement;
+                if (/\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(question.content)) {
+                    contentElement = `
+          <img src="${question.content}" 
+          alt="题目图片" 
+          onerror="this.onerror=null;this.parentElement.innerHTML='<h3>图片加载失败</h3>'">`;
+                } else {
+                    contentElement = `<h3 style="font-size: 1.6rem;">${question.content}</h3>`;
+                }
+
+                document.getElementById('questionContent').innerHTML = contentElement;
+                const res = await fetch('/quiz/queryEndtime', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quizId })
+                });
+                console.log(res);
+                const happy = await res.json();
+                console.log(happy);
+                const endtime = happy.endtime;
+                console.log(endtime);
+                startCountdown(endtime);
+                startTime = time;
+            } catch (error) {
+                console.error('加载题目失败:', error);
+            }
+        }
+
+        function startCountdown(endtime) {
+            endtime = new Date(endtime);
+            console.log(endtime);
+            console.log(time);
+            clearInterval(countdownInterval);
+            let remaining = Math.floor((endtime - time) / 1000);
+            const timer = document.getElementById('timer');
+
+            const update = () => {
+                // console.log(remaining);
+                const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+                const secs = (remaining % 60).toString().padStart(2, '0');
+                timer.textContent = `${mins}:${secs}`;
+                timer.style.color = remaining <= 10 ? '#ffcdd2' : 'white';
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    stopQuestion();
+                }
+                remaining = Math.floor((endtime - time) / 1000);
+            };
+
+            update();
+            countdownInterval = setInterval(update, 100);
+        }
+
+        async function nextQuestion() {
+            const response = await fetch(`/quiz/${quizId}/question`);
+            const { isEnd } = await response.json();
+            console.log(isEnd);
+            if (isEnd) {
+                window.location.href = `end?id=${quizId}`;
+                return;
+            }
+            loadQuestion();
+        }
+
+        async function submitAnswer() {
+            console.log('fuck');
+            if (hasAnswered) return;
+            hasAnswered = true;
+            console.log('fuck');
+
+            const answer = document.getElementById('answerInput').value.trim();
+            if (!answer) {
+                alert('请输入答案');
+                hasAnswered = false;
+                return;
+            }
+
+            console.log(startTime);
+            console.log(time);
+            const elapsedTime = Math.round((time - startTime) / 1000);
+            console.log(elapsedTime);
+
+            try {
+                const response = await fetch('/quiz/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quizId, questionId, answer })
+                });
+
+                const result = await response.json();
+                const questionPanel = document.querySelector('.question-panel');
+                const content = document.querySelector('.question-content');
+
+                if (response.ok) {
+                    questionPanel.classList.add(result.isCorrect ? 'correct' : 'incorrect');
+                    content.classList.add(result.isCorrect ? 'correct' : 'incorrect');
+                    content.innerHTML = `
+            <div>${result.isCorrect ? '🎉 回答正确！' : '❌ 回答错误'}</div>
+            <div style="margin-top:1rem;font-size:1.2rem;">耗时 ${elapsedTime} 秒</div>
+          `;
+                } else {
+                    content.innerHTML = `<div>⚠️ 提交失败：${result.error}</div>`;
+                }
+
+                document.getElementById('submitButton').disabled = true;
+                document.getElementById('submitButton').style.display = 'none';
+                document.getElementById('answerInput').style.display = 'none';
+            } catch (error) {
+                console.error('提交答案失败:', error);
+                alert('提交失败，请重试');
+                hasAnswered = false;
+            }
+        }
+
+        async function setupSocket() {
+            socket.on('quiz-start', () => { nextQuestion(); });
+            socket.on('next-question', () => { nextQuestion(); });
+            socket.on('stop-question', () => { stopQuestion(); });
+            socket.emit('player-join', { quizId });
+        }
+
+        async function verifyAccess() {
+            try {
+                var response = await fetch('/quiz/verify/enter', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ quizId })
+                });
+
+                if (!response.ok) {
+                    window.location.href = `enter?id=${quizId}`;
+                    return;
+                }
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = '验证失败，请重新尝试';
+                setTimeout(() => window.location.href = `enter?id=${quizId}`, 2000);
+            } finally {
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await verifyAccess();
+            setupSocket();
+        });
+
+        // let focus=true;
+        // const cheatDetection=()=>{
+        //   const cheatHandle=async ()=>{
+        //     await fetch('/quiz/cheat');
+        //     window.location='/404';
+        //   }
+        //   window.addEventListener('blur',()=>{focus=false;});
+        //   window.addEventListener('focus',()=>{focus=true;});
+        //   document.addEventListener('visibilitychange', () => {
+        //     if (document.visibilityState === 'hidden'&&!focus) cheatHandle();
+        //   });
+        // }
+        // cheatDetection();
+    </script>
+</body>
+
+</html>
