@@ -7,21 +7,21 @@
     "debug": "node --inspect-brk app.js --env-file-if-exists=.env"
   },
   "dependencies": {
-    "axios": "^1.9.0",
+    "axios": "^1.21.1",
     "bcrypt": "^6.0.0",
-    "express": "^5.1.0",
-    "express-session": "^1.18.1",
-    "multer": "^1.4.5-lts.2",
-    "mysql2": "^3.14.1",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "multer": "^2.5.0",
+    "mysql2": "^3.24.6",
     "pdf-lib": "^1.17.1",
-    "pdfkit": "^0.17.1",
+    "pdfkit": "^0.21.0",
     "session-file-store": "^1.5.0",
-    "socket.io": "^4.8.1",
+    "socket.io": "^4.8.4",
     "upgrade": "^1.1.0",
-    "uuid": "^11.1.0",
+    "uuid": "^14.0.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.14"
   }
 }
